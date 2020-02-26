@@ -20,7 +20,13 @@ wget --no-check-certificate -O tcp.sh https://github.com/wwfemg/Linux-NetSpeed/r
 
 第三部：安裝V2Ray
 
+如果需要安裝寶塔，請加速完先安裝，不需要，跳過看下一步：
+
+yum install -y wget && wget -O install.sh http://download.bt.cn/install/install_6.0.sh && sh install.sh
+
 bash <(curl -Ls https://blog.sprov.xyz/v2-ui.sh)
+
+記得在寶塔裡面放行端口：切記
 
 
 如何獨步天下，請自行摸索
