@@ -29,7 +29,7 @@ yum install -y wget && wget -O install.sh http://download.bt.cn/install/install_
 
 V2Ray：
 
-bash <(curl -Ls https://blog.sprov.xyz/v2-ui.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
 
 記得在寶塔裡面放行端口：切記
 
