@@ -13,7 +13,7 @@ retry_command() {
 
 # 更新和安裝必要軟體
 retry_command apt update -y
-retry_command apt install -y curl wget socat
+retry_command apt install -y curl wget socat vim
 
 # 設定BBR
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
