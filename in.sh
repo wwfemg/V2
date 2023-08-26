@@ -10,8 +10,16 @@ echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 lsmod | grep bbr
 
-# 安裝x-ui，並自動輸入用戶名、密碼和端口
-echo -e "naive\nnaive\n8400" | bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
+# 使用 expect 工具來自動回答 x-ui 的安裝問題
+/usr/bin/expect <<EOD
+spawn bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
+expect {
+    "*[y/n?]*" { send "y\r"; exp_continue }
+    "*Username:*" { send "wwname\r"; exp_continue }
+    "*Password:*" { send "wwname\r"; exp_continue }
+    "*Port:*" { send "8400\r"; exp_continue }
+}
+EOD
 
 # 更新和安裝Caddy
 apt update
