@@ -11,20 +11,7 @@ sysctl -p
 lsmod | grep bbr
 
 # 安裝x-ui，並自動輸入用戶名、密碼和端口
-# 使用 expect 工具來自動回答 x-ui 的安裝問題
-/usr/bin/expect <<EOD
-spawn bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
-expect "Do you wish to continue?"
-send "y\r"
-expect "Username"
-send "namename\r"
-expect "Password"
-send "wwname\r"
-expect "Port"
-send "8400\r"
-expect eof
-EOD
-
+echo -e "naive\nnaive\n8400" | bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
 
 # 更新和安裝Caddy
 apt update
