@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# 输出Logo
+echo "#########################"
+echo "# Naiveproxy与X-ui共存  #"
+echo "#########################"
+
 # 添加用户提示
 while true; do
     read -p "準備好安装请按y，否則按q退出: " choice
