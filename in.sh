@@ -25,7 +25,7 @@ echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 lsmod | grep bbr
 
-# 安裝x-ui，不自動設定用戶名、密碼和端口
+# 安裝x-ui
 bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh)
 
 # 更新和安裝Caddy
