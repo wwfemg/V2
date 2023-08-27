@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # 输出Logo
+
 echo "#########################"
 echo "# Naiveproxy与X-ui共存  #"
 echo "#########################"
