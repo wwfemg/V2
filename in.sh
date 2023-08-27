@@ -1,5 +1,13 @@
 #!/bin/bash
-
+# 添加用户提示
+while true; do
+    read -p "安装请按y，退出请按q: " choice
+    case $choice in
+        [Yy]* ) break;;  # 如果用户输入 y 或 Y，跳出循环，继续执行脚本
+        [Qq]* ) exit;;    # 如果用户输入 q 或 Q，退出脚本
+        * ) echo "请输入y或q。";;  # 如果用户输入其他字符，显示错误消息并重新询问
+    esac
+done
 # 更新和安裝必要軟體
 apt update -y
 apt install -y curl wget socat
