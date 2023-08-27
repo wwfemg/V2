@@ -1,7 +1,7 @@
 #!/bin/bash
 # 添加用户提示
 while true; do
-    read -p "安装请按y，退出请按q: " choice
+    read -p "準備好安装请按y，否則按q退出: " choice
     case $choice in
         [Yy]* ) break;;  # 如果用户输入 y 或 Y，跳出循环，继续执行脚本
         [Qq]* ) exit;;    # 如果用户输入 q 或 Q，退出脚本
