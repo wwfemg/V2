@@ -102,6 +102,9 @@ fi
 # 全部成功，重置状态文件
 echo "" > $STATUS_FILE
 
+# 全部成功，删除状态文件
+rm -f $STATUS_FILE
+
 # 打开vim编辑器以编辑/etc/caddy/Caddyfile文件
 vim /etc/caddy/Caddyfile
 
