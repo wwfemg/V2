@@ -104,3 +104,7 @@ echo "" > $STATUS_FILE
 
 # 打开vim编辑器以编辑/etc/caddy/Caddyfile文件
 vim /etc/caddy/Caddyfile
+
+
+# 保存并退出，然后重启Caddy服务
+systemctl restart caddy
