@@ -109,23 +109,11 @@ fi
 # 全部成功，删除状态文件
 rm -f $STATUS_FILE
 
-# 打开vim编辑器以编辑/etc/caddy/Caddyfile文件
-# vim /etc/caddy/Caddyfile
-
-# 自动清空 Caddyfile 并保存
+# 清空 Caddyfile
 echo "" > /etc/caddy/Caddyfile
 
 # 打开一个空的 vim 编辑器以编辑 /etc/caddy/Caddyfile 文件
 vim /etc/caddy/Caddyfile
-if [ $? -eq 0 ]; then
-  echo "Caddyfile 已成功编辑。"
-else
-  echo "Caddyfile 编辑失败，退出脚本。"
-  exit 1
-fi
-
-# 提示用户手动编辑 Caddyfile 后继续
-read -p "现在手动编辑 /etc/caddy/Caddyfile，编辑完成后按 [Enter] 继续..."
 
 # 保存并退出，然后重启Caddy服务
 systemctl restart caddy
