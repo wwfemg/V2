@@ -1,7 +1,14 @@
 #!/bin/bash
 
+# 检查是否为root用户
+if [ "$(id -u)" != "0" ]; then
+    echo "此脚本必须以root权限运行" 1>&2
+    exit 1
+fi
+
 # 初始化一个状态文件
 STATUS_FILE="/tmp/install_status.txt"
+rm -f $STATUS_FILE  # 删除状态文件以确保从一个干净的状态开始
 
 # 输出Logo
 echo "###########################################"
@@ -63,11 +70,10 @@ fi
 
 # 更新和安装Caddy
 if ! check_step_done "install_caddy"; then
-    apt update || error_exit
     apt install -y vim curl debian-keyring debian-archive-keyring apt-transport-https || error_exit
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg || error_exit
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list || error_exit
-    apt update || error_exit
+    apt update -y || error_exit
     apt install -y caddy || error_exit
     mark_step_done "install_caddy"
 fi
@@ -92,22 +98,19 @@ if ! check_step_done "install_go"; then
       wget https://go.dev/dl/go1.21.0.linux-arm64.tar.gz || error_exit
       rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.0.linux-arm64.tar.gz || error_exit
     fi
-    export PATH=$PATH:/usr/local/go/bin
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    source ~/.bashrc
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest || error_exit
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive || error_exit
     mv caddy /usr/bin/ || error_exit
     mark_step_done "install_go"
 fi
 
-# 全部成功，重置状态文件
-echo "" > $STATUS_FILE
-
 # 全部成功，删除状态文件
 rm -f $STATUS_FILE
 
 # 打开vim编辑器以编辑/etc/caddy/Caddyfile文件
 vim /etc/caddy/Caddyfile
-
 
 # 保存并退出，然后重启Caddy服务
 systemctl restart caddy
