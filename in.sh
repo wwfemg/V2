@@ -110,7 +110,13 @@ fi
 rm -f $STATUS_FILE
 
 # 打开vim编辑器以编辑/etc/caddy/Caddyfile文件
-vim /etc/caddy/Caddyfile
+# vim /etc/caddy/Caddyfile
+
+# 自动清空 Caddyfile
+vim -c ":1,\$d | wq" /etc/caddy/Caddyfile
+
+# 提示用户手动编辑 Caddyfile
+read -p "现在手动编辑 /etc/caddy/Caddyfile，编辑完成后按 [Enter] 继续..."
 
 # 保存并退出，然后重启Caddy服务
 systemctl restart caddy
