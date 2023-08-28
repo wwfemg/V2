@@ -2,13 +2,13 @@
 
 # 初始化一个状态文件
 STATUS_FILE="/tmp/install_status.txt"
-echo "" > $STATUS_FILE
 
 # 输出Logo
 echo "###########################################"
 echo "# Naiveproxy与X-ui共存Caddy自动证书续签  #"
 echo "###########################################"
 
+# 添加用户提示
 while true; do
     read -p "准备好安装请按y，否则按q退出: " choice
     case $choice in
@@ -18,31 +18,35 @@ while true; do
     esac
 done
 
+# 出错时的操作
 error_exit() {
     echo "错误发生，选择重新执行或退出（r/e）: "
     read choice
     case $choice in
-        [Rr]*) return 1;;
+        [Rr]*) ;;
         [Ee]*) exit 1;;
         *) echo "无效选项，退出"; exit 1;;
     esac
-    return 0
 }
 
+# 检查步骤完成
 check_step_done() {
     grep -q "$1" $STATUS_FILE
 }
 
+# 标记步骤完成
 mark_step_done() {
     echo "$1" >> $STATUS_FILE
 }
 
+# 更新和安装必要软件
 if ! check_step_done "update_and_install"; then
     apt update -y || error_exit
     apt install -y curl wget socat || error_exit
     mark_step_done "update_and_install"
 fi
 
+# 设置BBR
 if ! check_step_done "setup_bbr"; then
     echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf || error_exit
     echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf || error_exit
@@ -51,11 +55,13 @@ if ! check_step_done "setup_bbr"; then
     mark_step_done "setup_bbr"
 fi
 
+# 安装x-ui
 if ! check_step_done "install_xui"; then
     bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) || error_exit
     mark_step_done "install_xui"
 fi
 
+# 更新和安装Caddy
 if ! check_step_done "install_caddy"; then
     apt update || error_exit
     apt install -y vim curl debian-keyring debian-archive-keyring apt-transport-https || error_exit
@@ -66,6 +72,7 @@ if ! check_step_done "install_caddy"; then
     mark_step_done "install_caddy"
 fi
 
+# 更改Caddyfile
 if ! check_step_done "change_caddyfile"; then
     cd /etc/caddy/ || error_exit
     sed -i 's/8080/8400/g' Caddyfile || error_exit
@@ -74,10 +81,17 @@ if ! check_step_done "change_caddyfile"; then
     mark_step_done "change_caddyfile"
 fi
 
+# 其他步骤和安装Go
 if ! check_step_done "install_go"; then
-    GO_LATEST=$(curl https://golang.org/VERSION?m=text)
-    wget "https://golang.org/dl/${GO_LATEST}.linux-amd64.tar.gz" || error_exit
-    rm -rf /usr/local/go && tar -C /usr/local -xzf "${GO_LATEST}.linux-amd64.tar.gz" || error_exit
+    apt install -y golang-go || error_exit
+    apt remove -y golang-go || error_exit
+    if [ "$(uname -m)" == "x86_64" ]; then
+      wget https://go.dev/dl/go1.20.7.linux-amd64.tar.gz || error_exit
+      rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.7.linux-amd64.tar.gz || error_exit
+    else
+      wget https://go.dev/dl/go1.21.0.linux-arm64.tar.gz || error_exit
+      rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.0.linux-arm64.tar.gz || error_exit
+    fi
     export PATH=$PATH:/usr/local/go/bin
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest || error_exit
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive || error_exit
@@ -85,6 +99,5 @@ if ! check_step_done "install_go"; then
     mark_step_done "install_go"
 fi
 
-# 清空并删除状态文件
+# 全部成功，重置状态文件
 echo "" > $STATUS_FILE
-rm $STATUS_FILE
