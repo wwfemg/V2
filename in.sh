@@ -23,13 +23,7 @@ while true; do
 done
 
 error_exit() {
-    echo "错误发生，选择重新执行或退出（r/e）: "
-    read choice
-    case $choice in
-        [Rr]*) ;;
-        [Ee]*) exit 1;;
-        *) echo "无效选项，退出"; exit 1;;
-    esac
+    echo "错误发生，但脚本将继续执行..."
 }
 
 check_step_done() {
