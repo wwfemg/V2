@@ -6,6 +6,7 @@
 apt install curl
 
 2、自建一鍵代NaiveProxy與x-ui共存，執行以下代碼
+
 curl -O https://raw.githubusercontent.com/wwfemg/V2/master/in.sh && chmod +x in.sh && ./in.sh
 
 3、一定選擇y，並且填寫好x-ui的用戶名和密碼，端口請設定為8400
