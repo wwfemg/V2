@@ -1,20 +1,11 @@
-自建一鍵代NaiveProxy與x-ui共存
-curl -O https://raw.githubusercontent.com/wwfemg/V2/master/in.sh && chmod +x in.sh && ./in.sh
-請輸入這條命令完成
+一、僅測試了Debian系統
 
-1、系統會自動安裝x-ui，並手動確定用戶名和密碼以及端口 端口就設定為8400
-2、請注意修改caddyfile文件中的x-ui端口為8400
-3、中途caddy報錯是因為沒有配置域名，請忽略，按r繼續
-4、最後完成編譯之後，系統會自動進入編輯caddyfile文件，請按i進入編輯模式
-5、配置文件，請根據自己需求填寫如下：
-:443, 域名 {
-	  route {
-                forward_proxy {
-                        basic_auth 用戶名 密碼
-                        hide_ip
-                        hide_via
-                        probe_resistance
-                }
-	  reverse_proxy localhost:8400
-	}
-}
+1、請先安裝crul
+apt install curl
+
+2、自建一鍵代NaiveProxy與x-ui共存，執行以下代碼
+curl -O https://raw.githubusercontent.com/wwfemg/V2/master/in.sh && chmod +x in.sh && ./in.sh
+
+3、一定選擇y，並且填寫好x-ui的用戶名和密碼，端口請設定為8400
+4、再次提醒輸入域名的時候，請輸入解析好的域名，以及Naiveprocy的客戶端使用者用戶名和密碼
+5、reboot
