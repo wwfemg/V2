@@ -1,4 +1,4 @@
-一、僅測試了Debian系統
+僅測試了Debian系統
 
 1、請先安裝crul
 apt install curl
