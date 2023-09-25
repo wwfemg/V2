@@ -6,13 +6,16 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+# 初始化一个状态文件
 STATUS_FILE="/tmp/install_status.txt"
-rm -f $STATUS_FILE
+rm -f $STATUS_FILE  # 删除状态文件以确保从一个干净的状态开始
 
+# 输出Logo
 echo "###########################################"
 echo "# Naiveproxy与X-ui共存Caddy自动证书续签  #"
 echo "###########################################"
 
+# 添加用户提示
 while true; do
     read -p "准备好安装请按y，否则按q退出: " choice
     case $choice in
@@ -22,6 +25,7 @@ while true; do
     esac
 done
 
+# 出错时的操作
 error_exit() {
     echo "错误发生，选择重新执行或退出（r/e）: "
     read choice
@@ -32,20 +36,24 @@ error_exit() {
     esac
 }
 
+# 检查步骤完成
 check_step_done() {
     grep -q "$1" $STATUS_FILE
 }
 
+# 标记步骤完成
 mark_step_done() {
     echo "$1" >> $STATUS_FILE
 }
 
+# 更新和安装必要软件
 if ! check_step_done "update_and_install"; then
     apt update -y || error_exit
     apt install -y curl wget socat || error_exit
     mark_step_done "update_and_install"
 fi
 
+# 设置BBR
 if ! check_step_done "setup_bbr"; then
     echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf || error_exit
     echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf || error_exit
@@ -54,11 +62,13 @@ if ! check_step_done "setup_bbr"; then
     mark_step_done "setup_bbr"
 fi
 
+# 安装x-ui
 if ! check_step_done "install_xui"; then
     bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) || error_exit
     mark_step_done "install_xui"
 fi
 
+# 更新和安装Caddy
 if ! check_step_done "install_caddy"; then
     apt install -y vim curl debian-keyring debian-archive-keyring apt-transport-https || error_exit
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg || error_exit
@@ -68,6 +78,7 @@ if ! check_step_done "install_caddy"; then
     mark_step_done "install_caddy"
 fi
 
+# 更改Caddyfile
 if ! check_step_done "change_caddyfile"; then
     cd /etc/caddy/ || error_exit
     sed -i 's/8080/8400/g' Caddyfile || error_exit
@@ -76,6 +87,7 @@ if ! check_step_done "change_caddyfile"; then
     mark_step_done "change_caddyfile"
 fi
 
+# 其他步骤和安装Go
 if ! check_step_done "install_go"; then
     apt install -y golang-go || error_exit
     apt remove -y golang-go || error_exit
@@ -94,26 +106,14 @@ if ! check_step_done "install_go"; then
     mark_step_done "install_go"
 fi
 
+# 全部成功，删除状态文件
 rm -f $STATUS_FILE
 
-# 获取用户输入，并更新 Caddyfile
-read -p "請輸入域名: " domain
-read -p "請輸入用戶名: " username
-read -s -p "請輸入密碼: " password
-echo
+# 清空 Caddyfile
+echo "" > /etc/caddy/Caddyfile
 
-cat <<EOF > /etc/caddy/Caddyfile
-:443, $domain {
-   route {
-                forward_proxy {
-                        basic_auth $username $password
-                        hide_ip
-                        hide_via
-                        probe_resistance
-                }
-   reverse_proxy localhost:8400
- }
-}
-EOF
+# 打开一个空的 vim 编辑器以编辑 /etc/caddy/Caddyfile 文件
+vim /etc/caddy/Caddyfile
 
+# 保存并退出，然后重启Caddy服务
 systemctl restart caddy
