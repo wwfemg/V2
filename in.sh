@@ -49,7 +49,7 @@ if ! check_step_done "setup_bbr"; then
 fi
 
 if ! check_step_done "install_xui"; then
-    echo "y" | bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) || error_exit
+    bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) || error_exit
     mark_step_done "install_xui"
 fi
 
