@@ -71,19 +71,17 @@ if ! check_step_done "change_caddyfile"; then
 fi
 
 if ! check_step_done "install_go"; then
-    apt install -y golang-go || error_exit
-    apt remove -y golang-go || error_exit
     if [ "$(uname -m)" == "x86_64" ]; then
-      wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz || error_exit
-      rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz || error_exit
+        wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz || error_exit
+        rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz || error_exit
     else
-      wget https://go.dev/dl/go1.22.2.linux-arm64.tar.gz || error_exit
-      rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.2.linux-arm64.tar.gz || error_exit
+        wget https://go.dev/dl/go1.22.2.linux-arm64.tar.gz || error_exit
+        rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.2.linux-arm64.tar.gz || error_exit
     fi
-    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-    source ~/.bashrc
-    go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest || error_exit
-    ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive || error_exit
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
+    source /etc/profile
+    /usr/local/go/bin/go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest || error_exit
+    /root/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive || error_exit
     mv caddy /usr/bin/ || error_exit
     mark_step_done "install_go"
 fi
