@@ -67,7 +67,7 @@ if ! check_step_done "change_caddyfile"; then
     cd /etc/caddy/ || error_exit "切换到Caddy配置目录失败"
     sed -i 's/8080/8400/g' Caddyfile || error_exit "修改Caddyfile失败"
     sed -i 's/# //g' Caddyfile || error_exit "修改Caddyfile失败"
-    systemctl reload caddy || error_exit "重新加载Caddy失败"
+    systemctl restart caddy || error_exit "重启Caddy失败"
     mark_step_done "change_caddyfile"
 fi
 
