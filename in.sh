@@ -98,6 +98,7 @@ echo
 
 cat <<EOF > /etc/caddy/Caddyfile
 :443, $domain {
+   tls me@gmail.com
    route {
                 forward_proxy {
                         basic_auth $username $password
