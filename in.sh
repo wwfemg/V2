@@ -23,8 +23,7 @@ while true; do
 done
 
 error_exit() {
-    echo "错误发生：$1"
-    exit 1
+    echo "错误发生，但脚本将继续执行..."
 }
 
 check_step_done() {
@@ -36,58 +35,79 @@ mark_step_done() {
 }
 
 if ! check_step_done "update_and_install"; then
-    apt update -y || error_exit "更新包列表失败"
-    apt install -y curl wget socat || error_exit "安装基础包失败"
+    apt update -y || error_exit
+    apt install -y curl wget socat || error_exit
     mark_step_done "update_and_install"
 fi
 
 if ! check_step_done "setup_bbr"; then
-    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf || error_exit "写入sysctl.conf失败"
-    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf || error_exit "写入sysctl.conf失败"
-    sysctl -p || error_exit "应用sysctl配置失败"
-    lsmod | grep bbr || error_exit "BBR模块加载失败"
+    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf || error_exit
+    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf || error_exit
+    sysctl -p || error_exit
+    lsmod | grep bbr || error_exit
     mark_step_done "setup_bbr"
 fi
 
 if ! check_step_done "install_xui"; then
-    bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) || error_exit "安装X-ui失败"
+    bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) || error_exit
     mark_step_done "install_xui"
 fi
 
 if ! check_step_done "install_caddy"; then
-    apt install -y vim curl debian-keyring debian-archive-keyring apt-transport-https || error_exit "安装Caddy依赖包失败"
-    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg || error_exit "获取Caddy GPG密钥失败"
-    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list || error_exit "添加Caddy源失败"
-    apt update -y || error_exit "更新包列表失败"
-    apt install -y caddy || error_exit "安装Caddy失败"
+    apt install -y vim curl debian-keyring debian-archive-keyring apt-transport-https || error_exit
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg || error_exit
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list || error_exit
+    apt update -y || error_exit
+    apt install -y caddy || error_exit
     mark_step_done "install_caddy"
 fi
 
 if ! check_step_done "change_caddyfile"; then
-    cd /etc/caddy/ || error_exit "切换到Caddy配置目录失败"
-    sed -i 's/8080/8400/g' Caddyfile || error_exit "修改Caddyfile失败"
-    sed -i 's/# //g' Caddyfile || error_exit "修改Caddyfile失败"
-    systemctl restart caddy || error_exit "重启Caddy失败"
+    cd /etc/caddy/ || error_exit
+    sed -i 's/8080/8400/g' Caddyfile || error_exit
+    sed -i 's/# //g' Caddyfile || error_exit
+    systemctl reload caddy || error_exit
     mark_step_done "change_caddyfile"
 fi
 
+if ! check_step_done "install_go"; then
+    apt install -y golang-go || error_exit
+    apt remove -y golang-go || error_exit
+    if [ "$(uname -m)" == "x86_64" ]; then
+      wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz || error_exit
+      rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz || error_exit
+    else
+      wget https://go.dev/dl/go1.22.2.linux-arm64.tar.gz || error_exit
+      rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.2.linux-arm64.tar.gz || error_exit
+    fi
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    source ~/.bashrc
+    go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest || error_exit
+    ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive || error_exit
+    mv caddy /usr/bin/ || error_exit
+    mark_step_done "install_go"
+fi
+
+rm -f $STATUS_FILE
+
 # 获取用户输入，并更新 Caddyfile
-read -p "请输入您的域名 (例如：example.com): " domain
-read -p "请输入用于验证的电子邮件地址 (例如：yourname@example.com): " email
+read -p "請輸入域名: " domain
+read -p "請輸入用戶名: " username
+read -s -p "請輸入密碼: " password
+echo
 
 cat <<EOF > /etc/caddy/Caddyfile
-$domain {
-    encode zstd gzip
-    file_server
-    reverse_proxy 127.0.0.1:8400
-    tls $email {
-        protocols tls1.2 tls1.3
-        curves x25519 p384 p521
-    }
+:443, $domain {
+   route {
+                forward_proxy {
+                        basic_auth $username $password
+                        hide_ip
+                        hide_via
+                        probe_resistance
+                }
+   reverse_proxy localhost:8400
+ }
 }
 EOF
 
-# 重启Caddy并检查是否成功
-systemctl restart caddy || error_exit "重启Caddy失败"
-
-echo "安装和配置完成。"
+systemctl restart caddy
